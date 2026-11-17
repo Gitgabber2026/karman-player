@@ -46,3 +46,8 @@ export async function getAtlasState(): Promise<AtlasState> {
 export async function getAtlas(): Promise<Atlas> {
   return (await getAtlasState()).atlas;
 }
+
+/** Сброс кэша после изменений в админ-панели */
+export function invalidateAtlas() {
+  cached = null;
+}

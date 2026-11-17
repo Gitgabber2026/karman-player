@@ -111,7 +111,7 @@ export async function loadAtlasFromDb(db: Db): Promise<AtlasData> {
     })),
     editions: editions.map((e) => ({
       festival: sl("festival", e.festivalId)!, year: e.year, startDate: e.startDate, endDate: e.endDate, status: e.status,
-      lineup: edLineup.get(e.id) ?? [], sources: [], verification: e.verification, checkedAt: iso(e.checkedAt),
+      lineup: edLineup.get(e.id) ?? [], sources: srcs("edition", e.id), verification: e.verification, checkedAt: iso(e.checkedAt),
     })),
     events: published(events).map((e) => {
       const city = e.cityId ? cityById.get(e.cityId) : undefined;

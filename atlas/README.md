@@ -29,6 +29,16 @@ npm run dev                     # http://localhost:3000 → /ru
 * `TICKETMASTER_API_KEY` — Consumer Key из https://developer.ticketmaster.com/. Без ключа адаптер помечен «not-configured», события не выдумываются.
 * `NEXT_PUBLIC_MAP_STYLE_URL` — стиль MapLibre (по умолчанию CARTO Dark Matter). Если стиль недоступен, карта переходит на офлайн-подложку с границами Natural Earth.
 
+## Админ-панель
+
+`/ru/admin` — нужны `DATABASE_URL` и `ADMIN_SESSION_SECRET` (не менее 32 символов). Пользователь:
+
+```bash
+npm run admin:create -- editor@example.org 'длинный-пароль' editor   # admin | editor | researcher
+```
+
+Researcher добавляет события и выпуски фестивалей (только с официальным источником) — они уходят на модерацию; editor публикует их и меняет статусы проверки.
+
 ## Структура
 
 ```

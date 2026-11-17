@@ -83,3 +83,23 @@ describe("ticketmaster adapter", () => {
     expect(mapTicketmasterEvent({ bad: true }, atlas.d.cities, new Date())).toBeNull();
   });
 });
+
+describe("admin auth", async () => {
+  process.env.ADMIN_SESSION_SECRET = "x".repeat(40);
+  const { hashPassword, verifyPassword, signSession, readSession, hasRole } = await import("@/lib/auth");
+  it("hashes and verifies passwords", () => {
+    const h = hashPassword("correct horse battery");
+    expect(verifyPassword("correct horse battery", h)).toBe(true);
+    expect(verifyPassword("wrong", h)).toBe(false);
+    expect(verifyPassword("x", null)).toBe(false);
+  });
+  it("rejects tampered and expired sessions", () => {
+    const exp = Math.floor(Date.now() / 1000) + 60;
+    const token = signSession({ userId: "u", email: "a@b.c", role: "researcher", exp });
+    expect(readSession(token)?.role).toBe("researcher");
+    const forged = Buffer.from(JSON.stringify({ userId: "u", email: "a@b.c", role: "admin", exp })).toString("base64url") + "." + token.split(".")[1];
+    expect(readSession(forged)).toBeNull();
+    expect(readSession(token, Date.now() + 120_000)).toBeNull();
+    expect(hasRole({ userId: "u", email: "", role: "researcher", exp }, "editor")).toBe(false);
+  });
+});
