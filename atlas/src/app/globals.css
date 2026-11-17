@@ -1,0 +1,131 @@
+@import "tailwindcss";
+@import "maplibre-gl/dist/maplibre-gl.css";
+
+/* Electronic Music World Atlas — Dark Cinematic Editorial */
+@theme {
+  --color-bg: #080a10;
+  --color-bg-2: #111522;
+  --color-card: #171c2a;
+  --color-line: #252b3d;
+  --color-line-2: #333b52;
+  --color-violet: #9d4edd;
+  --color-cyan: #00d9ff;
+  --color-acid: #b7ff39;
+  --color-ink: #f4f5f8;
+  --color-ink-2: #9ca3b5;
+  --color-ink-3: #6b7287;
+  --color-warn: #ffb547;
+  --color-danger: #ff5d7a;
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Unbounded Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --animate-pulse-ring: pulse-ring 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+  @keyframes pulse-ring {
+    0% { transform: scale(0.6); opacity: 0.9; }
+    100% { transform: scale(2.4); opacity: 0; }
+  }
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  background: var(--color-bg);
+  font-family: var(--font-sans);
+  min-height: 100dvh;
+}
+
+::selection {
+  background: color-mix(in oklab, var(--color-violet) 60%, transparent);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-cyan);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Редакционная типографика длинных текстов */
+.prose-atlas p {
+  color: color-mix(in oklab, var(--color-ink) 88%, var(--color-ink-2));
+  line-height: 1.75;
+  font-size: 1.0625rem;
+  max-width: 70ch;
+}
+.prose-atlas p + p {
+  margin-top: 1rem;
+}
+
+/* Тонкая «топографическая» сетка для фонов секций */
+.grid-bg {
+  background-image:
+    linear-gradient(to right, color-mix(in oklab, var(--color-line) 55%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in oklab, var(--color-line) 55%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-2) transparent;
+}
+
+/* MapLibre — тёмная тема элементов управления */
+.maplibregl-ctrl-group {
+  background: var(--color-card) !important;
+  border: 1px solid var(--color-line) !important;
+  box-shadow: none !important;
+}
+.maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--color-line) !important;
+}
+.maplibregl-ctrl-group button .maplibregl-ctrl-icon {
+  filter: invert(1) brightness(0.9);
+}
+.maplibregl-ctrl-attrib {
+  background: color-mix(in oklab, var(--color-bg) 80%, transparent) !important;
+  color: var(--color-ink-3) !important;
+  font-size: 10px;
+}
+.maplibregl-ctrl-attrib a {
+  color: var(--color-ink-2) !important;
+}
+.maplibregl-ctrl-attrib-button {
+  filter: invert(1);
+}
+.maplibregl-popup-content {
+  background: var(--color-card) !important;
+  color: var(--color-ink) !important;
+  border: 1px solid var(--color-line-2);
+  border-radius: 12px !important;
+  padding: 12px 14px !important;
+  box-shadow: 0 20px 50px -10px rgb(0 0 0 / 0.6) !important;
+}
+.maplibregl-popup-tip {
+  border-top-color: var(--color-card) !important;
+  border-bottom-color: var(--color-card) !important;
+}
+.maplibregl-popup-close-button {
+  color: var(--color-ink-2);
+  font-size: 18px;
+  padding: 2px 8px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
