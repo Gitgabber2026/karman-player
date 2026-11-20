@@ -222,6 +222,7 @@ export const routes: MusicRoute[] = [
     summary: t("Места рождения house — от The Warehouse до Smartbar.", "Where house was born."),
     stops: [
       stop("The Warehouse (бывш.)", "206 S Jefferson St — клуб, давший имя жанру.", addr(41.8789, -87.6427), "the-warehouse-chicago"),
+      stop("The Music Box (бывш.)", "326 N Michigan Ave — клуб Ron Hardy (1983–1987), лаборатория раннего acid house.", { lat: 41.8879, lng: -87.6246, precision: "approximate" }, "music-box-chicago"),
       stop("Smartbar", "Клуб под Metro, работающий с 1982 года.", addr(41.9497, -87.6588), "smartbar"),
     ],
   },

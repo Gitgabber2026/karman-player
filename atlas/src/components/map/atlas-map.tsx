@@ -568,7 +568,7 @@ export function AtlasMap({
           {!selCountry && !selCity && (
             <div className="pointer-events-none absolute bottom-4 right-16 z-10 hidden rounded-full border border-line bg-bg/80 px-3 py-1.5 text-xs text-ink-3 backdrop-blur md:block">{labels.clickCountry}</div>
           )}
-          {!remoteBase && <div className="absolute right-3 top-16 z-10 rounded-full border border-line bg-bg/80 px-3 py-1 text-[10px] text-ink-3 lg:top-4">Offline basemap · Natural Earth</div>}
+          {!remoteBase && <div className="absolute right-3 top-4 z-10 hidden rounded-full border border-line bg-bg/80 px-3 py-1 text-[10px] text-ink-3 lg:block">Offline basemap · Natural Earth</div>}
         </>
       )}
     </div>

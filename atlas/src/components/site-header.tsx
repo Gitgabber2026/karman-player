@@ -30,7 +30,7 @@ export function SiteHeader({ locale, t }: { locale: Locale; t: Pick<Dict, "nav" 
             EM World<br /><span className="text-ink-2">Atlas</span>
           </span>
         </Link>
-        <nav className="hidden flex-1 items-center gap-1 xl:flex" aria-label="primary">
+        <nav className="hidden flex-1 items-center gap-1 2xl:flex" aria-label="primary">
           {nav.map(([seg, label]) => (
             <Link key={seg} href={`/${locale}/${seg}`} className={cn("rounded-full px-3 py-1.5 text-sm text-ink-2 hover:text-ink", isActive(seg) && "bg-card text-ink")}>
               {label}
@@ -38,18 +38,18 @@ export function SiteHeader({ locale, t }: { locale: Locale; t: Pick<Dict, "nav" 
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          <GlobalSearch locale={locale} placeholder={t.map.searchPlaceholder} kindLabels={t.kinds} nothing={t.common.nothing} className="hidden w-64 md:block" />
+          <GlobalSearch locale={locale} placeholder={t.map.searchPlaceholder} kindLabels={t.kinds} nothing={t.common.nothing} className="hidden w-64 md:block xl:w-80" />
           <Link href={`/${locale}/me`} className="hidden whitespace-nowrap rounded-full px-3 py-1.5 text-sm text-ink-2 hover:text-ink lg:block">{t.nav.me}</Link>
           <Link href={switchHref} hrefLang={other} className="flex items-center gap-1 rounded-full border border-line px-2.5 py-1.5 text-xs uppercase text-ink-2 hover:text-ink" aria-label={other === "en" ? "English" : "Русский"}>
             <Globe2 className="h-3.5 w-3.5" aria-hidden /> {other}
           </Link>
-          <button className="grid h-9 w-9 place-items-center rounded-full border border-line xl:hidden" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="menu">
+          <button className="grid h-9 w-9 place-items-center rounded-full border border-line 2xl:hidden" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="menu">
             {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
           </button>
         </div>
       </div>
       {open && (
-        <div className="border-t border-line bg-bg px-4 pb-6 pt-4 xl:hidden">
+        <div className="border-t border-line bg-bg px-4 pb-6 pt-4 2xl:hidden">
           <GlobalSearch locale={locale} placeholder={t.map.searchPlaceholder} kindLabels={t.kinds} nothing={t.common.nothing} className="mb-4 md:hidden" />
           <nav className="grid grid-cols-2 gap-1" aria-label="mobile">
             {[...nav, ["labels", t.nav.labels] as const, ["me", t.nav.me] as const, ["search", t.nav.search] as const, ["about", t.nav.about] as const].map(([seg, label]) => (

@@ -8,6 +8,7 @@ import { genres, genreRelationships } from "./genres";
 import { labels } from "./labels";
 import { eras, milestones, routes } from "./history";
 import { allSources } from "./helpers";
+import { citiesWave2, venuesWave2, festivalsWave2 } from "./wave2";
 
 /**
  * Встроенный seed-набор. Используется:
@@ -23,9 +24,9 @@ export function getSeed(): AtlasData {
   return {
     continents,
     countries,
-    cities,
-    venues,
-    festivals,
+    cities: [...cities, ...citiesWave2],
+    venues: [...venues, ...venuesWave2],
+    festivals: [...festivals, ...festivalsWave2],
     editions,
     events: [],
     artists,
