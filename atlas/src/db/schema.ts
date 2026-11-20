@@ -369,3 +369,15 @@ export const favorites = pgTable("favorites", {
   kind: favoriteKindEnum("kind").notNull().default("favorite"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (t) => [primaryKey({ columns: [t.userId, t.entityType, t.entityId, t.kind] })]);
+
+/** Журнал изменений админ-панели: кто, что и когда изменил */
+export const auditLog = pgTable("audit_log", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  userId: uuid("user_id").references(() => users.id, { onDelete: "set null" }),
+  userEmail: text("user_email").notNull(),
+  action: text("action").notNull(),
+  entityType: text("entity_type"),
+  entityRef: text("entity_ref"),
+  details: jsonb("details").$type<Record<string, unknown>>().notNull().default({}),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [index("audit_log_created_idx").on(t.createdAt), index("audit_log_entity_idx").on(t.entityType, t.entityRef)]);
