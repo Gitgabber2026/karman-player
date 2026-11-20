@@ -17,6 +17,10 @@ export function Field({ label, children, hint }: { label: string; children: Reac
 
 const MESSAGES: Record<string, string> = {
   auth: "Неверный email или пароль.",
+  locked: "Слишком много неудачных попыток. Попробуйте через 15 минут.",
+  entity: "Объект не найден.",
+  media: "Изображение добавлено.",
+  article: "Статья сохранена. Если она была проверена, статус сброшен на «Требует проверки».",
   db: "База данных не подключена (DATABASE_URL).",
   dates: "Проверьте даты: окончание раньше начала.",
   year: "Год выпуска не совпадает с датой начала.",
@@ -40,7 +44,7 @@ export function Notice({ ok, error }: { ok?: string; error?: string }) {
 }
 
 export function AdminShell({ locale, session, children, title }: { locale: string; session: Session; children: React.ReactNode; title: string }) {
-  const nav = [["", "Обзор"], ["/events/new", "Новое событие"], ["/editions/new", "Выпуск фестиваля"], ["/verify", "Проверка данных"]];
+  const nav = [["", "Обзор"], ["/events/new", "Новое событие"], ["/editions/new", "Выпуск фестиваля"], ["/verify", "Проверка данных"], ["/edit", "Статьи и переводы"], ["/media", "Изображения"]];
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6 lg:px-8">
       <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-line pb-4">

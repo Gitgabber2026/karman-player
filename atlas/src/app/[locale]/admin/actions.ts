@@ -1,5 +1,10 @@
 "use server";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
+import { isLocked, recordFailure, resetAttempts } from "@/lib/rate-limit";
+import type { Section } from "@/lib/types";
+import { mergeSections } from "@/lib/sections";
+import { LICENSES } from "@/lib/licenses";
 import { eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { getDb } from "@/db/client";
@@ -23,8 +28,16 @@ export async function login(fd: FormData) {
   const email = String(fd.get("email") ?? "").trim().toLowerCase();
   const password = String(fd.get("password") ?? "");
   if (!db) back(fd, "", { error: "db" });
+  const h = await headers();
+  const ip = (h.get("x-forwarded-for") ?? "").split(",")[0].trim() || h.get("x-real-ip") || "local";
+  const key = `${email}|${ip}`;
+  if (isLocked(key)) back(fd, "", { error: "locked" });
   const [u] = await db!.select().from(s.users).where(eq(s.users.email, email)).limit(1);
-  if (!u || u.role === "user" || !verifyPassword(password, u.passwordHash)) back(fd, "", { error: "auth" });
+  if (!u || u.role === "user" || !verifyPassword(password, u.passwordHash)) {
+    recordFailure(key);
+    back(fd, "", { error: "auth" });
+  }
+  resetAttempts(key);
   await setSessionCookie({ userId: u.id, email: u.email, role: u.role });
   redirect(`/${loc(fd)}/admin`);
 }
@@ -147,4 +160,78 @@ export async function setVerification(fd: FormData) {
   await db.update(t).set({ verification: status, checkedAt: sql`now()`, updatedAt: sql`now()` }).where(eq(t.slug, slug));
   invalidateAtlas();
   back(fd, "/verify", { ok: `${kind}:${slug}`, kind });
+}
+
+const ENTITY_TABLES = { ...TABLES } as const;
+type EntityKind = keyof typeof ENTITY_TABLES;
+const entityKind = z.enum(Object.keys(ENTITY_TABLES) as [EntityKind, ...EntityKind[]]);
+
+
+const MediaInput = z.object({
+  kind: entityKind,
+  slug: z.string().min(1),
+  url: httpsUrl.refine((u) => /\.(jpe?g|png|webp|avif|gif|svg)(\?.*)?$/i.test(u) || /upload\.wikimedia\.org/.test(u), "image url"),
+  thumbUrl: opt(httpsUrl),
+  altRu: z.string().trim().min(3).max(300),
+  altEn: opt(z.string().trim().max(300)),
+  captionRu: opt(z.string().trim().max(500)),
+  author: z.string().trim().min(2).max(200),
+  license: z.enum(LICENSES),
+  licenseUrl: httpsUrl,
+  sourceUrl: httpsUrl,
+});
+
+/** Изображение принимается только с автором, лицензией и источником */
+export async function createMedia(fd: FormData) {
+  const { db } = await requireRole("editor");
+  const parsed = MediaInput.safeParse(Object.fromEntries(fd));
+  if (!parsed.success) back(fd, "/media", { error: parsed.error.issues.map((i) => i.path.join(".")).join(", ") });
+  const m = parsed.data!;
+  const t = ENTITY_TABLES[m.kind];
+  const [row] = await db.select({ id: t.id }).from(t).where(eq(t.slug, m.slug)).limit(1);
+  if (!row) back(fd, "/media", { error: "entity" });
+  await db.insert(s.mediaAssets).values({
+    entityType: m.kind, entityId: row!.id, url: m.url, thumbUrl: m.thumbUrl ?? null, altRu: m.altRu, altEn: m.altEn ?? null,
+    captionRu: m.captionRu ?? null, author: m.author, license: m.license, licenseUrl: m.licenseUrl, sourceUrl: m.sourceUrl,
+  });
+  invalidateAtlas();
+  back(fd, "/media", { ok: "media", kind: m.kind });
+}
+
+export async function deleteMedia(fd: FormData) {
+  const { db } = await requireRole("editor");
+  await db.delete(s.mediaAssets).where(eq(s.mediaAssets.id, z.string().uuid().parse(fd.get("id"))));
+  invalidateAtlas();
+  back(fd, "/media", { ok: "delete" });
+}
+
+const ArticleInput = z.object({
+  kind: entityKind,
+  slug: z.string().min(1),
+  nameRu: z.string().trim().min(1).max(200),
+  nameEn: opt(z.string().trim().max(200)),
+  summaryRu: z.string().trim().min(20).max(2000),
+  summaryEn: opt(z.string().trim().max(2000)),
+  sectionsRu: z.string().max(40000).default(""),
+  sectionsEn: z.string().max(40000).default(""),
+});
+
+/**
+ * Редактирование текста статьи и перевода. Правка содержимого сбрасывает
+ * статус «Проверено» на «Требует проверки»: новый текст ещё не сверён.
+ */
+export async function updateArticle(fd: FormData) {
+  const { db } = await requireRole("editor");
+  const parsed = ArticleInput.safeParse(Object.fromEntries(fd));
+  if (!parsed.success) back(fd, "/edit", { error: parsed.error.issues.map((i) => i.path.join(".")).join(", "), kind: String(fd.get("kind")), slug: String(fd.get("slug")) });
+  const a = parsed.data!;
+  const t = ENTITY_TABLES[a.kind];
+  const sections: Section[] = mergeSections(a.sectionsRu, a.sectionsEn);
+  await db.update(t).set({
+    nameRu: a.nameRu, nameEn: a.nameEn ?? null, summaryRu: a.summaryRu, summaryEn: a.summaryEn ?? null, sections,
+    verification: sql`case when verification = 'verified' then 'unverified'::verification_status else verification end`,
+    updatedAt: sql`now()`,
+  }).where(eq(t.slug, a.slug));
+  invalidateAtlas();
+  back(fd, "/edit", { ok: "article", kind: a.kind, slug: a.slug });
 }

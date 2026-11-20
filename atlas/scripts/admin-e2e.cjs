@@ -8,7 +8,8 @@ const B = process.env.BASE_URL ?? "http://localhost:3000";
   const login = async (email) => {
     const ctx = await b.newContext(); const p = await ctx.newPage();
     await p.goto(B + '/ru/admin'); await p.fill('input[name=email]', email); await p.fill('input[name=password]', 'test-password-123');
-    await Promise.all([p.waitForURL(/\/ru\/admin$/), p.click('button:has-text("Войти")')]); return p;
+    await p.click('button:has-text("Войти")'); await p.waitForLoadState('networkidle');
+    if (!(await p.locator('text=Выйти').count())) throw new Error('login failed for ' + email); return p;
   };
   // неверный пароль
   const bad = await (await b.newContext()).newPage();

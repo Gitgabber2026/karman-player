@@ -103,3 +103,27 @@ describe("admin auth", async () => {
     expect(hasRole({ userId: "u", email: "", role: "researcher", exp }, "editor")).toBe(false);
   });
 });
+
+describe("article sections format", async () => {
+  const { parseSections, mergeSections, sectionsToText } = await import("@/lib/sections");
+  it("round-trips RU/EN sections", () => {
+    const merged = mergeSections("## История\nТекст один.\n\nТекст два.\n\n## Звучание\nТретий.", "## History\nText one.");
+    expect(merged).toHaveLength(2);
+    expect(merged[0].heading).toEqual({ ru: "История", en: "History" });
+    expect(merged[1].body.en).toBeUndefined();
+    expect(parseSections(sectionsToText(merged, "ru"))).toHaveLength(2);
+    expect(parseSections("## Без текста")).toHaveLength(0);
+  });
+});
+
+describe("login rate limit", async () => {
+  const { isLocked, recordFailure, resetAttempts } = await import("@/lib/rate-limit");
+  it("locks after 5 failures within the window", () => {
+    const t = 1_000_000;
+    for (let i = 0; i < 5; i++) recordFailure("k", t + i);
+    expect(isLocked("k", t + 10)).toBe(true);
+    expect(isLocked("k", t + 16 * 60 * 1000)).toBe(false);
+    resetAttempts("k");
+    expect(isLocked("k", t + 10)).toBe(false);
+  });
+});
