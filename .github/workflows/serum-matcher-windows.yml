@@ -1,0 +1,49 @@
+name: Build Serum Matcher for Windows
+on:
+  push:
+    paths:
+      - "serum-matcher/**"
+      - ".github/workflows/serum-matcher-windows.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: serum-matcher
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt pyinstaller pytest
+
+      - name: Tests
+        run: python -m pytest -q tests
+
+      - name: Build SerumMatcher.exe
+        run: >
+          python -m PyInstaller --noconfirm --windowed --name SerumMatcher
+          --collect-all dawdreamer --collect-all tkinterdnd2
+          --paths . app.py
+
+      - name: Check the built program
+        shell: pwsh
+        run: |
+          $exe = "dist\SerumMatcher\SerumMatcher.exe"
+          Start-Process -Wait -FilePath $exe -ArgumentList "--log-file", "selftest.log", "selftest"
+          Get-Content selftest.log
+          if (-not (Select-String -Path selftest.log -Pattern "selftest ok" -Quiet)) { throw "selftest failed" }
+          Copy-Item README.md dist\SerumMatcher\README.md
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SerumMatcher-Windows
+          path: serum-matcher/dist/SerumMatcher

@@ -29,14 +29,29 @@
 Высота сэмпла определяется автоматически и на результат почти не влияет:
 бас в A1 найдёт пресет, отрендеренный на C1/C2.
 
-## Установка (Windows)
+## Установка на Windows 11 (готовая программа)
 
-1. Установи **Python 3.11 или 3.12 (64-bit)** с python.org, при установке
-   отметь «Add Python to PATH».
-2. Запусти `install.bat`.
-3. Запусти `start.bat`.
+Python ставить не нужно.
+
+1. Открой репозиторий на GitHub → **Actions** → **Build Serum Matcher for Windows**.
+   Сборка запускается сама при каждом изменении программы; можно и вручную:
+   **Run workflow**.
+2. Открой последний успешный запуск (зелёная галочка) и внизу, в **Artifacts**,
+   скачай `SerumMatcher-Windows`.
+3. Распакуй ZIP в любую папку, например `C:\SerumMatcher`
+   (не запускай прямо из архива).
+4. Запусти `SerumMatcher.exe`.
+   Если Windows покажет «Windows защитил ваш компьютер» — нажми
+   **Подробнее → Выполнить в любом случае** (программа не подписана сертификатом).
+
+<details>
+<summary>Запуск из исходников (для разработчиков)</summary>
+
+1. Python 3.11–3.13 (64-bit) с python.org, отметить «Add Python to PATH».
+2. `install.bat`, затем `start.bat`.
 
 macOS: `pip install -r requirements.txt`, затем `python3 -m serum_matcher`.
+</details>
 
 ## Первый запуск
 
@@ -65,7 +80,9 @@ python -m serum_matcher match kick_bass.wav --top 20 --explain
 python -m serum_matcher match lead.wav --category Lead --category "Leads/Pack 2"
 ```
 
-Или просто перетащи сэмпл на `match.bat`.
+Из готовой программы то же самое: `SerumMatcher.exe match ...`
+(вывод окна нет, поэтому добавь `--log-file out.txt`). Из исходников можно
+просто перетащить сэмпл на `match.bat`.
 
 * `--notes 48` — рендерить только C2 (в 4 раза быстрее, но хуже для сэмплов далеко от C2);
 * `--no-previews` — не сохранять превью (экономит место: ~130 КБ на пресет);

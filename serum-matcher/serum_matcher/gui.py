@@ -7,6 +7,7 @@ import queue
 import subprocess
 import sys
 import threading
+import time
 import tkinter as tk
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -208,18 +209,35 @@ class App:
         cannot take the window down, and the run resumes past that preset."""
         env = dict(os.environ, PYTHONIOENCODING="utf-8")
         flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
-        cwd = str(Path(__file__).resolve().parents[1])
+        if getattr(sys, "frozen", False):   # SerumMatcher.exe: the exe itself is the CLI
+            cmd, cwd = [sys.executable], None
+        else:
+            cmd, cwd = [sys.executable, "-m", "serum_matcher"], str(Path(__file__).resolve().parents[1])
+        Path(self.index_dir).mkdir(parents=True, exist_ok=True)
+        log = Path(self.index_dir) / "_indexing.log"
         while True:
-            self.proc = subprocess.Popen([sys.executable, "-m", "serum_matcher", *args], cwd=cwd, env=env,
-                                         stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
-                                         encoding="utf-8", errors="replace", creationflags=flags)
+            log.write_text("", encoding="utf-8")
+            self.proc = subprocess.Popen([*cmd, "--log-file", str(log), *args], cwd=cwd, env=env,
+                                         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                                         stderr=subprocess.DEVNULL, creationflags=flags)
             tail: list[str] = []
-            for line in self.proc.stdout:
-                parts = line.rstrip("\n").split("\t")
-                if parts[0] == "PROGRESS" and len(parts) == 4:
-                    self.q.put(("progress", int(parts[1]), int(parts[2]), parts[3]))
-                elif line.strip():
-                    tail = (tail + [line.strip()])[-8:]
+            with open(log, encoding="utf-8", errors="replace") as fh:
+                buf = ""
+                while True:
+                    finished = self.proc.poll() is not None
+                    buf += fh.read()
+                    *lines, buf = buf.split("\n")
+                    for line in lines:
+                        parts = line.split("\t")
+                        if parts[0] == "PROGRESS" and len(parts) == 4:
+                            self.q.put(("progress", int(parts[1]), int(parts[2]), parts[3]))
+                        elif line.strip():
+                            tail = (tail + [line.strip()])[-8:]
+                    if finished:
+                        if buf.strip():
+                            tail = (tail + [buf.strip()])[-8:]
+                        break
+                    time.sleep(0.2)
             code = self.proc.wait()
             if self.stop_flag:
                 # killed on purpose: the preset being rendered is not a crasher
@@ -232,7 +250,8 @@ class App:
             crashed_now = (Path(self.index_dir) / "_current.txt").exists()
             self.restarts += 1
             if not crashed_now or self.restarts > 50:
-                self.q.put(("error", "Индексация прервалась:\n" + "\n".join(tail)))
+                last = tail[-1] if tail else f"код выхода {code}"
+                self.q.put(("error", f"Индексация прервалась:\n{last}\n\nПодробности: {log}"))
                 return
             self.q.put(("progress_note", "Serum упал на пресете — пропускаю его и продолжаю…"))
 

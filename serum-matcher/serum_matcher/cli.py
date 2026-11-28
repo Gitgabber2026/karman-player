@@ -80,11 +80,32 @@ def cmd_match(a) -> None:
             print(f"  {m.name}: {parts}")
 
 
+def cmd_selftest(a) -> None:
+    import numpy as np
+
+    from .features import SR, analyze
+
+    t = np.arange(SR * 2) / SR
+    res = analyze(np.sin(2 * np.pi * 110 * t) * np.exp(-t))
+    assert res.f0 and abs(res.f0 - 110) < 2, res.f0
+    import dawdreamer
+    dawdreamer.RenderEngine(SR, 512)
+    import soundfile  # noqa: F401
+    import tkinter  # noqa: F401
+    try:
+        import tkinterdnd2  # noqa: F401
+        dnd = "да"
+    except Exception as e:
+        dnd = f"нет ({e})"
+    print(f"selftest ok; перетаскивание: {dnd}")
+
+
 def main(argv=None) -> None:
     p = argparse.ArgumentParser(prog="serum-matcher",
                                 description="Ищет в вашей библиотеке Serum пресеты, похожие на сэмпл.")
     p.add_argument("--index", default=DEFAULT_INDEX, help=f"папка индекса (по умолчанию {DEFAULT_INDEX})")
     p.add_argument("--progress-lines", action="store_true", help=argparse.SUPPRESS)
+    p.add_argument("--log-file", help=argparse.SUPPRESS)   # the .exe has no console: write output here
     sub = p.add_subparsers(dest="cmd")
 
     s = sub.add_parser("index", help="отрендерить пресеты Serum и построить индекс")
@@ -105,10 +126,16 @@ def main(argv=None) -> None:
     s.add_argument("--explain", action="store_true", help="показать, чем отличаются лучшие")
     s.set_defaults(func=cmd_match)
 
+    s = sub.add_parser("selftest", help="проверить, что все компоненты на месте")
+    s.set_defaults(func=cmd_selftest)
+
     s = sub.add_parser("gui", help="окно с перетаскиванием сэмпла")
     s.set_defaults(func=lambda a: __import__("serum_matcher.gui", fromlist=["run"]).run(a.index))
 
     args = p.parse_args(argv)
+    if args.log_file:
+        log = open(args.log_file, "w", encoding="utf-8", buffering=1)
+        sys.stdout = sys.stderr = log
     global LINE_PROGRESS
     LINE_PROGRESS = args.progress_lines
     if not args.cmd:
