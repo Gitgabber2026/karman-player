@@ -1,0 +1,5 @@
+numpy>=1.24
+scipy>=1.10
+soundfile>=0.12
+dawdreamer>=0.8      # hosts Serum to render presets
+tkinterdnd2>=0.3     # drag & drop into the window (optional)
